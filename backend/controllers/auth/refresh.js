@@ -2,12 +2,19 @@ import jwt from "jsonwebtoken";
 import { User } from "../../models/user.js";
 import { RequestError, createTokens } from "../../helpers/index.js";
 
-const { REFRESH_TOKEN_SECRET_KEY } = process.env;
+const { REFRESH_TOKEN_SECRET_KEY, NODE_ENV } = process.env;
+
+const cookieBase = {
+  httpOnly: true,
+  path: "/",
+  // pentru cross-site (GitHub Pages -> Render) e obligatoriu:
+  sameSite: "none",
+  secure: true, // Render folosește HTTPS
+};
 
 const refresh = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
-
+    const token = req.cookies?.refreshToken;
     if (!token) {
       throw RequestError(401, "Missing refresh token");
     }
@@ -15,7 +22,7 @@ const refresh = async (req, res) => {
     let payload;
     try {
       payload = jwt.verify(token, REFRESH_TOKEN_SECRET_KEY);
-    } catch (err) {
+    } catch {
       throw RequestError(401, "Invalid or expired refresh token");
     }
 
@@ -31,27 +38,22 @@ const refresh = async (req, res) => {
       refreshToken,
     });
 
+    // setează noile cookies
     res
       .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-        maxAge: 15 * 60 * 1000,
+        ...cookieBase,
+        maxAge: 15 * 60 * 1000, // 15 min
       })
       .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        ...cookieBase,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 zile
       })
       .status(200)
       .json({ message: "Token refreshed" });
   } catch (error) {
     console.error("Refresh error:", error.message);
-    if (!error.status) {
-      error.status = 401;
-    }
-    throw error;
+    const status = error.status || 401;
+    res.status(status).json({ message: error.message || "Unauthorized" });
   }
 };
 

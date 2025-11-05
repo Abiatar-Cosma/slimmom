@@ -6,15 +6,16 @@ const { ACCESS_TOKEN_SECRET_KEY } = process.env;
 
 const getCurrentUser = async (req, res) => {
   try {
-    const token = req.cookies.accessToken;
-
+    const token = req.cookies?.accessToken;
     if (!token) {
       throw RequestError(401, "No access token");
     }
 
-    const payload = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
-    if (!payload?.id) {
-      throw RequestError(401, "Invalid access token payload");
+    let payload;
+    try {
+      payload = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
+    } catch {
+      throw RequestError(401, "Invalid or expired access token");
     }
 
     const user = await User.findById(payload.id).select("email name dailyDiet");
@@ -31,11 +32,8 @@ const getCurrentUser = async (req, res) => {
     });
   } catch (error) {
     console.error("GetCurrentUser error:", error.message);
-    if (!error.status) {
-      error.status = 401;
-      error.message = "Invalid or expired access token";
-    }
-    res.status(error.status).json({ message: error.message });
+    const status = error.status || 401;
+    res.status(status).json({ message: error.message || "Unauthorized" });
   }
 };
 
