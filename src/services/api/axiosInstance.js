@@ -5,6 +5,7 @@ import axios from "axios";
 const ORIGIN = (
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 ).replace(/\/+$/, "");
+
 const instance = axios.create({
   baseURL: `${ORIGIN}/api`,
   withCredentials: true,
