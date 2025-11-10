@@ -17,9 +17,8 @@ const formatsLogger = process.env.NODE_ENV === "development" ? "dev" : "short";
 app.use(logger(formatsLogger));
 app.use(cookieParser());
 
-// 🔥 CORS CONFIG
 const {
-  CLIENT_URL = "https://abiatar-cosma.github.io",
+  CLIENT_URL = "https://Abiatar-Cosma.github.io",
   DEV_CLIENT_URL = "http://localhost:5173",
 } = process.env;
 

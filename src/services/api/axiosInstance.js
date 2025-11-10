@@ -5,12 +5,9 @@ import axios from "axios";
 const ORIGIN = (
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 ).replace(/\/+$/, "");
-
-// Setăm /api aici, iar în request-uri folosești căi scurte: "/users", "/products", etc.
 const instance = axios.create({
   baseURL: `${ORIGIN}/api`,
   withCredentials: true,
-  headers: { "Content-Type": "application/json" },
 });
 
 // --- Refresh token automat pe 401 (fără bucle sau dubluri) ---
