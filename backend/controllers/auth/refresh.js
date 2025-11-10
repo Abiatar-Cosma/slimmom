@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User } from "../../models/user.js";
+import { User } from "../../models/index.js";
 import { RequestError, createTokens } from "../../helpers/index.js";
 
 const { REFRESH_TOKEN_SECRET_KEY, NODE_ENV } = process.env;

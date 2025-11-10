@@ -1,3 +1,4 @@
+// backend/models/user.js
 import mongoose from "mongoose";
 import handleSaveErrors from "../helpers/handleSaveErrors.js";
 
@@ -32,4 +33,7 @@ const userSchema = new Schema(
 
 userSchema.post("save", handleSaveErrors);
 
-export const User = model("user", userSchema);
+// 🔥 modelul unic, exportat default
+const User = model("user", userSchema);
+
+export default User;
