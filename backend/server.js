@@ -6,12 +6,14 @@ dotenv.config();
 
 const { DB_HOST, PORT = 3000 } = process.env;
 
+app.set("trust proxy", 1);
+
 mongoose
   .connect(DB_HOST)
   .then(() => {
     console.log("✅ Database connection successful");
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((error) => {
