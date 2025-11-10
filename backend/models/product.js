@@ -1,3 +1,4 @@
+// backend/models/product.js
 import mongoose from "mongoose";
 import handleSaveErrors from "../helpers/handleSaveErrors.js";
 
@@ -14,7 +15,7 @@ const productSchema = new Schema(
       required: true,
     },
     title: {
-      type: Object,
+      type: String,
       required: true,
     },
     calories: {
@@ -31,4 +32,6 @@ const productSchema = new Schema(
 
 productSchema.post("save", handleSaveErrors);
 
-export const Product = model("product", productSchema);
+const Product = model("product", productSchema);
+
+export default Product;

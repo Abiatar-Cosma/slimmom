@@ -33,7 +33,6 @@ const userSchema = new Schema(
 
 userSchema.post("save", handleSaveErrors);
 
-// 🔥 modelul unic, exportat default
 const User = model("user", userSchema);
 
 export default User;
