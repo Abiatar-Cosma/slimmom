@@ -33,4 +33,4 @@ dailyNutritionSchema.post("save", handleSaveErrors);
 
 const DailyNutrition = model("dailyNutrition", dailyNutritionSchema);
 
-export { DailyNutrition };
+export default DailyNutrition;
