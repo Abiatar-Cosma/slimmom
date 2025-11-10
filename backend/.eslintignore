@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+coverage
+scripts/products.json
+scripts/invalidProducts.json
+.env
