@@ -18,7 +18,7 @@ app.use(logger(formatsLogger));
 app.use(cookieParser());
 
 const {
-  CLIENT_URL = "https://Abiatar-Cosma.github.io",
+  CLIENT_URL = "https://abiatar-cosma.github.io",
   DEV_CLIENT_URL = "http://localhost:5173",
 } = process.env;
 
