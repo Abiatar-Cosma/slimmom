@@ -1,5 +1,4 @@
 import { Product } from "../../models/index.js";
-import { RequestError } from "../../helpers/index.js";
 
 const findProductsByQuery = async (req, res) => {
   const { q } = req.query;
@@ -13,11 +12,8 @@ const findProductsByQuery = async (req, res) => {
     { title: 1, weight: 1, calories: 1 }
   ).limit(20);
 
-  if (result.length < 1) {
-    throw RequestError(404, "Not found");
-  }
-
-  res.json(result);
+  // chiar dacă e [], e valid
+  return res.status(200).json(result);
 };
 
 export default findProductsByQuery;

@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 import { getDailyMeals } from "../../redux/products/products-operations";
 import DiaryDateCalendar from "../DiaryDateCalendar/DiaryDateCalendar";
-import categories from "../../categories.json";
 import s from "./SideBar.module.css";
 
 const SideBar = () => {
@@ -11,136 +10,96 @@ const SideBar = () => {
   const { userDailyDiet } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  const [productsShown, setProductsShown] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("");
-  const [specificProducts, setSpecificProducts] = useState(null);
-
+  // 🔄 Încarcă mesele pentru data selectată
   useEffect(() => {
-    if (dailyMeals) return;
     if (!date) return;
-    dispatch(getDailyMeals({ date: date }));
-  }, [dispatch, date, dailyMeals]);
+    dispatch(getDailyMeals({ date }));
+  }, [dispatch, date]);
 
-  const getCategoryName = (i) => {
-    return categories[i];
-  };
+  // 📊 Datele despre dietă (de la calculator)
+  const notAllowed = userDailyDiet?.notAllowedProduct || [];
 
-  const dailyCalories = Number(userDailyDiet?.calories).toFixed(1);
-  const consumedCalories = dailyMeals
-    ?.reduce((total, meal) => {
-      return total + meal.calories;
-    }, 0)
-    ?.toFixed(1);
-  const leftCalories =
-    (dailyCalories - consumedCalories).toFixed(1) < 0
-      ? 0
-      : (dailyCalories - consumedCalories).toFixed(1);
-  const percent = ((consumedCalories * 100) / dailyCalories).toFixed(2);
+  const summary = useMemo(() => {
+    if (!userDailyDiet?.calories) return null;
 
-  const foodCategories = userDailyDiet?.categories?.map((i) => {
-    return getCategoryName(i);
-  });
+    const dailyCalories = Number(userDailyDiet.calories) || 0;
 
-  const showInfo =
-    userDailyDiet?.calories &&
-    userDailyDiet?.notAllowedProduct?.length > 0 &&
-    userDailyDiet?.categories?.length > 0;
-  const showDailyInfo =
-    dailyMeals?.length > 0 &&
-    userDailyDiet?.calories &&
-    userDailyDiet?.notAllowedProduct &&
-    userDailyDiet?.categories;
-  const noInfo =
-    !userDailyDiet ||
-    !userDailyDiet?.calories ||
-    !userDailyDiet?.notAllowedProduct ||
-    !userDailyDiet?.categories;
+    const consumed = (dailyMeals || []).reduce(
+      (total, meal) => total + (meal.calories || 0),
+      0
+    );
 
-  const handleBtnClick = (e) => {
-    if (e.target.textContent === activeCategory) {
-      setProductsShown(false);
-      setActiveCategory("");
-      setSpecificProducts(null);
-    } else {
-      setActiveCategory(e.target.textContent);
-      const productsToShow = userDailyDiet?.notAllowedProduct
-        ?.filter((i) => getCategoryName(i.category) === e.target.textContent)
-        .sort((a, b) => a.title.localeCompare(b.title));
-      setSpecificProducts(productsToShow);
-      setProductsShown(true);
-    }
-  };
+    const leftRaw = dailyCalories - consumed;
+    const left = leftRaw <= 0 ? 0 : leftRaw;
+
+    const percent = dailyCalories > 0 ? (consumed * 100) / dailyCalories : 0;
+
+    return {
+      dailyCalories: dailyCalories.toFixed(1),
+      consumed: consumed.toFixed(1),
+      left: left.toFixed(1),
+      percent: percent.toFixed(2),
+    };
+  }, [userDailyDiet, dailyMeals]);
+
+  const hasDietInfo = !!userDailyDiet?.calories && notAllowed.length > 0;
+  const hasDailyMeals = summary && (dailyMeals?.length || 0) > 0;
 
   return (
     <div className={s.sideBar}>
       <div className={s.box}>
+        {/* ========= SUMMARY ========= */}
         <section className={s.section}>
           <h2 className={s.title}>
             Summary for <DiaryDateCalendar location="sidebar" />
           </h2>
-          {noInfo && (
+
+          {!summary && (
             <p>
               Please fill out the form on the Calculator page to see your
               personal statistics.
             </p>
           )}
-          {showInfo && (
+
+          {summary && (
             <ul className={s.list}>
               <li className={s.item}>
                 <p>Left</p>
-                <p>{showDailyInfo ? leftCalories : "000"} kcal</p>
+                <p>{hasDailyMeals ? summary.left : "000"} kcal</p>
               </li>
               <li className={s.item}>
                 <p>Consumed</p>
-                <p>{showDailyInfo ? consumedCalories : "000"} kcal</p>
+                <p>{hasDailyMeals ? summary.consumed : "000"} kcal</p>
               </li>
               <li className={s.item}>
                 <p>Daily rate</p>
-                <p>{userDailyDiet.calories} kcal</p>
+                <p>{summary.dailyCalories} kcal</p>
               </li>
               <li className={s.item}>
                 <p>n% of normal</p>
-                <p>{showDailyInfo ? percent : 0} %</p>
+                <p>{hasDailyMeals ? summary.percent : "0.00"} %</p>
               </li>
             </ul>
           )}
         </section>
+
+        {/* ========= NOT RECOMMENDED FOODS ========= */}
         <section className={s.section}>
-          <h2 className={s.title}>Food not recommended</h2>
-          {showInfo && (
-            <ul className={s.list}>
-              {foodCategories?.map((element, index) => (
-                <li
-                  key={`not-recommended-categories-${index}`}
-                  className={s.item}
-                >
-                  <button
-                    type="button"
-                    onClick={handleBtnClick}
-                    className={s.button}
-                  >
-                    {element}
-                  </button>
+          <h2 className={s.title}>Foods you should not eat</h2>
+
+          {!hasDietInfo && <p>Your diet will be displayed here.</p>}
+
+          {hasDietInfo && (
+            <ol className={s.productsList}>
+              {notAllowed.map((el, index) => (
+                <li key={`${el.title}-${index}`} className={s.productItem}>
+                  {el.title}
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
-
-          {noInfo && <p>Your diet will be displayed here</p>}
         </section>
       </div>
-      {showInfo && productsShown && (
-        <section className={s.additional}>
-          <h3 className={s.title}>
-            Not recommended products in category {activeCategory}
-          </h3>
-          <ul className={s.productsList}>
-            {specificProducts.map((element, index) => (
-              <li key={`not-recommended-products-${index}`}>{element.title}</li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 };

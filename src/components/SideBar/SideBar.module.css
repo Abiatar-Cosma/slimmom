@@ -1,9 +1,7 @@
 .sideBar {
   width: 440px;
   padding: 40px 0 84px 0;
-  /* color */
   color: var(--second-color);
-  /* font */
   line-height: 1.21;
 }
 
@@ -13,12 +11,11 @@
 
 .title {
   margin-bottom: 20px;
-  /* color */
   color: var(--main-color);
-  /* font */
   font-size: 14px;
 }
 
+/* Folosit pentru summary rows */
 .item {
   display: flex;
   justify-content: space-between;
@@ -44,10 +41,20 @@
   margin-top: 40px;
 }
 
+/* Scroll pt lista de alimente nerecomandate */
 .productsList {
   padding-right: 10px;
   max-height: 160px;
   overflow-y: auto;
+  margin: 0;
+  padding-left: 18px; /* numerotare frumoasă */
+}
+
+/* item din lista de alimente nerecomandate */
+.productItem {
+  display: block;
+  margin-bottom: 6px;
+  line-height: 1.3;
 }
 
 .productsList::-webkit-scrollbar {

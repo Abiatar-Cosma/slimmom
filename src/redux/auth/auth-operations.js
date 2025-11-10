@@ -1,6 +1,9 @@
+// src/redux/auth/auth-operations.js
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import * as api from "../../services/api/auth";
 import { toast } from "react-toastify";
+
+const SESSION_FLAG_KEY = "slimmom_has_session";
 
 export const handleRegistration = createAsyncThunk(
   "users/signup",
@@ -21,6 +24,12 @@ export const handleLogin = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const result = await api.login(data);
+
+      // ✅ marcăm faptul că există o sesiune (cookies au fost setate)
+      try {
+        window.localStorage.setItem(SESSION_FLAG_KEY, "1");
+      } catch (_) {}
+
       return result;
     } catch (error) {
       toast.error(
@@ -32,13 +41,17 @@ export const handleLogin = createAsyncThunk(
   }
 );
 
-// 🔥 Eliminat refreshUserToken complet
-
 export const handleLogout = createAsyncThunk(
   "users/logout",
   async (_, { rejectWithValue }) => {
     try {
       const result = await api.logout();
+
+      // ✅ ștergem flagul de sesiune
+      try {
+        window.localStorage.removeItem(SESSION_FLAG_KEY);
+      } catch (_) {}
+
       return result;
     } catch (error) {
       toast.error(`Sorry, logout failed. Try again.`);
@@ -47,6 +60,7 @@ export const handleLogout = createAsyncThunk(
   }
 );
 
+// 🔍 getCurrentUser: doar dacă avem motiv să credem că există sesiune
 export const getCurrentUser = createAsyncThunk(
   "users/current",
   async (_, { rejectWithValue }) => {
@@ -54,6 +68,17 @@ export const getCurrentUser = createAsyncThunk(
       const result = await api.getCurrentUser();
       return result;
     } catch (error) {
+      const status = error.response?.status;
+
+      if (status === 401) {
+        // sesiune invalidă -> curățăm flagul
+        try {
+          window.localStorage.removeItem(SESSION_FLAG_KEY);
+        } catch (_) {}
+
+        return rejectWithValue(null);
+      }
+
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -88,3 +113,5 @@ export const getCalorieIntakeForUser = createAsyncThunk(
     }
   }
 );
+
+export { SESSION_FLAG_KEY };

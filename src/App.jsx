@@ -1,3 +1,6 @@
-import AppRouter from "./router/AppRouter";
-const App = () => <AppRouter />;
+// src/App.jsx
+import AppContent from "./AppContent";
+
+const App = () => <AppContent />;
+
 export default App;

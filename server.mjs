@@ -11,12 +11,18 @@ const distPath = path.join(__dirname, "dist");
 
 app.use(express.static(distPath));
 
-// SPA fallback pentru rutele client-side
-app.get("*", (_, res) => {
+// 🔥 Catch-all pentru SPA, dar fără "*" în path:
+// - ignoră /api
+// - ignoră /assets
+// - ignoră orice cu extensie (.js, .css, .png, etc.)
+// - pentru restul (ex: /, /login, /diary) trimite index.html
+app.get(/^(?!\/api)(?!\/assets)(?!.*\.[^/]+$).*/, (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
-const PORT = process.env.PORT || 3000;
+// ✅ Folosește alt port decât backend-ul (care e pe 3000)
+const PORT = process.env.FRONTEND_PORT || 5173;
+
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(`Frontend running on http://localhost:${PORT}`);
 });

@@ -12,6 +12,8 @@ const initialState = {
   userDailyDiet: null,
   dailyDiet: null,
   user: {},
+  accessToken: null, // pentru compatibilitate cu persist (dacă vei folosi)
+  refreshToken: null, // idem
   registrationStatus: false,
   isLogin: false,
   isLoading: false,
@@ -29,6 +31,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // signup
       .addCase(handleRegistration.pending, (state) => {
         state.isLoading = true;
         state.isError = null;
@@ -43,6 +46,7 @@ const authSlice = createSlice({
         state.isError = payload;
       })
 
+      // login
       .addCase(handleLogin.pending, (state) => {
         state.isLoading = true;
         state.isError = null;
@@ -58,6 +62,7 @@ const authSlice = createSlice({
         state.isError = payload;
       })
 
+      // current user
       .addCase(getCurrentUser.pending, (state) => {
         state.isLoading = true;
         state.isError = null;
@@ -68,12 +73,22 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.userDailyDiet = payload.dailyDiet;
       })
+      // în extraReducers, în loc de varianta ta actuală de getCurrentUser.rejected:
+
       .addCase(getCurrentUser.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.isLogin = false;
-        state.isError = payload;
+
+        if (payload === null) {
+          // 401 / sesiune invalidă => tratăm ca guest, fără eroare vizibilă
+          state.isLogin = false;
+          state.isError = null;
+        } else {
+          state.isLogin = false;
+          state.isError = payload;
+        }
       })
 
+      // logout
       .addCase(handleLogout.pending, (state) => {
         state.isLoading = true;
         state.isError = null;
@@ -84,6 +99,7 @@ const authSlice = createSlice({
         state.isError = payload;
       })
 
+      // daily-intake calc
       .addCase(getCalorieIntake.pending, (state) => {
         state.isLoading = true;
         state.isError = null;
@@ -97,6 +113,7 @@ const authSlice = createSlice({
         state.isError = payload;
       })
 
+      // daily-intake for user
       .addCase(getCalorieIntakeForUser.pending, (state) => {
         state.isLoading = true;
         state.isError = null;

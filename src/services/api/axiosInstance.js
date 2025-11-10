@@ -21,26 +21,32 @@ instance.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+    const status = error.response?.status;
 
     // dacă nu avem răspuns sau deja am încercat o dată, ieșim
     if (!error.response || original?._retry) {
       return Promise.reject(error);
     }
 
-    // doar pentru 401 și nu pentru apelul de refresh
+    // doar pentru 401, dar:
+    // - nu pentru /users/refresh (ca să nu buclăm)
+    // - nu pentru /users/current (guest e normal -> nu forțăm refresh)
     if (
-      error.response.status === 401 &&
-      !original.url.endsWith("/users/refresh")
+      status === 401 &&
+      !original.url.endsWith("/users/refresh") &&
+      !original.url.endsWith("/users/current")
     ) {
       original._retry = true;
 
       try {
         if (!isRefreshing) {
           isRefreshing = true;
-          // apelează refresh; serverul setează cookies noi
+
+          // încearcă refresh — serverul setează cookies noi dacă există refresh token
           await instance.post("/users/refresh", null, {
             withCredentials: true,
           });
+
           // trezim cererile blocate
           waitQueue.forEach((resolve) => resolve());
           waitQueue = [];
@@ -49,6 +55,7 @@ instance.interceptors.response.use(
           // așteaptă până se termină refresh-ul curent
           await new Promise((resolve) => waitQueue.push(resolve));
         }
+
         // reia cererea inițială cu cookies noi
         return instance(original);
       } catch (e) {

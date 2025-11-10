@@ -32,9 +32,17 @@ export const getDailyMeals = createAsyncThunk(
 
 export const addMeal = createAsyncThunk(
   "meals/addMeal",
-  async (newMeal, { rejectWithValue }) => {
+  async (newMeal, { rejectWithValue, dispatch, getState }) => {
     try {
       const meal = await api.addMeal(newMeal);
+
+      // după ce adăugăm, reîncărcăm lista pentru data curentă
+      const { products } = getState();
+      const currentDate = products.date;
+      if (currentDate) {
+        dispatch(getDailyMeals({ date: currentDate }));
+      }
+
       return meal;
     } catch (error) {
       toast.error(`Sorry, request failed. We can't add your meal.`);

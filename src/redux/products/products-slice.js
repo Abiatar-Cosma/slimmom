@@ -9,7 +9,7 @@ import {
 
 const initialState = {
   productsOptions: [],
-  dailyMeals: null,
+  dailyMeals: [],
   date: "",
   isLoading: false,
   error: "",
@@ -55,7 +55,7 @@ const productsSlice = createSlice({
       })
       .addCase(addMeal.fulfilled, (state, { payload }) => {
         state.isLoading = false;
-        state.dailyMeals = [...state.dailyMeals, payload];
+        state.dailyMeals = [...(state.dailyMeals || []), payload];
         state.productsOptions = [];
       })
       .addCase(addMeal.rejected, (state, { payload }) => {
